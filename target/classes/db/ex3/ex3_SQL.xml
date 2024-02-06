@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="co.kr.ex3.service.impl.ex3Mapper">
+
+	<select id="getList" resultType="ex3VO" >
+		SELECT
+			ID,
+			TITLE,
+			WRITER,
+			CONTENTS,
+			CNT,
+			DT::VARCHAR,
+			TM
+		FROM BOARD
+		ORDER BY ID ASC
+		LIMIT 10 OFFSET #{offset}
+	</select>
+	
+	<select id="getDetail" parameterType="ex3VO" resultType="ex3VO">
+		SELECT
+			B.ID,
+			B.TITLE,
+			B.WRITER,
+			B.CONTENTS,
+			B.CNT,
+			B.DT,
+			B.TM,
+			F.f_path AS fPath, 
+			F.SIZE,
+			F.f_name AS fName
+		FROM BOARD AS B
+		LEFT JOIN FILE_KGY AS F
+		ON B.F_ID = F.F_ID
+		WHERE B.ID = #{id}
+	</select>
+	
+	<insert id="insert" parameterType="ex3VO">
+		INSERT INTO BOARD
+			(ID, TITLE, WRITER, CONTENTS, DT, TM, F_ID)
+		VALUES
+			((SELECT MAX(ID)+1 FROM BOARD), #{title}, #{writer}, #{contents}, now(), now(), #{fId})
+	</insert>
+	
+	<insert id="fileUpload" parameterType="ex3VO">
+		INSERT INTO FILE_KGY
+			(F_ID, ORG_NM, F_NAME, SIZE, EXT, F_PATH)
+		VALUES
+			(#{fId}, #{orgNm}, CONCAT(#{fId},'_',#{orgNm}), #{size}, #{ext}, CONCAT('F:/workspace/upload/',#{fId},'_',#{orgNm}))
+	</insert>
+		
+	<update id="getUpdate" parameterType="ex3VO">
+	UPDATE BOARD
+	SET
+		TITLE = #{title},
+		WRITER = #{writer},
+		CONTENTS= #{contents},
+		DT = now(),
+		TM = now()
+	WHERE
+		ID = #{id}
+	</update>
+	
+	<delete id="getDelete" parameterType="ex3VO">
+		DELETE FROM BOARD
+		WHERE ID = #{id}
+	</delete>
+	
+	<update id="getCnt" parameterType="ex3VO">
+		UPDATE BOARD
+		SET
+			CNT = CNT + 1
+		WHERE 
+			ID = #{id}
+	</update>
+	
+	<select id="ex3Cnt" resultType="int">
+		SELECT count(*)
+		FROM board
+	</select>
+	
+	<select id="ex3DtCnt" resultType="HashMap">
+	SELECT
+		DT,
+		sum(CNT) AS dtcnt
+	FROM BOARD
+	GROUP BY DT
+	ORDER BY DT ASC;
+	</select>
+	
+</mapper>
